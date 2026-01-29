@@ -1,0 +1,98 @@
+<section class="space-y-6">
+  <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <h1 class="text-2xl font-semibold">Family member</h1>
+    <p class="text-sm text-slate-500">View trends and update health metrics.</p>
+  </div>
+
+  <div class="grid gap-4 lg:grid-cols-[2fr_1fr]">
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 class="text-lg font-semibold">Add health metric</h2>
+      <div class="mt-4 grid gap-4 md:grid-cols-2">
+        <label class="block text-sm font-medium">
+          Unit system
+          <div class="mt-2 flex items-center gap-3">
+            <label class="flex items-center gap-2 text-sm">
+              <input type="radio" name="units" value="Metric" [(ngModel)]="unitSystem" />
+              Metric (kg/m)
+            </label>
+            <label class="flex items-center gap-2 text-sm">
+              <input type="radio" name="units" value="Imperial" [(ngModel)]="unitSystem" />
+              Imperial (lb/ft/in)
+            </label>
+          </div>
+        </label>
+
+        <label class="block text-sm font-medium">
+          Weight
+          <input
+            [(ngModel)]="weight"
+            name="weight"
+            type="number"
+            class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+          />
+        </label>
+
+        <label class="block text-sm font-medium" *ngIf="unitSystem === 'Metric'">
+          Height (m)
+          <input
+            [(ngModel)]="height"
+            name="height"
+            type="number"
+            class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+          />
+        </label>
+
+        <div class="grid gap-3 md:grid-cols-2" *ngIf="unitSystem === 'Imperial'">
+          <label class="block text-sm font-medium">
+            Height (ft)
+            <input
+              [(ngModel)]="heightFeet"
+              name="heightFeet"
+              type="number"
+              class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+            />
+          </label>
+          <label class="block text-sm font-medium">
+            Height (in)
+            <input
+              [(ngModel)]="heightInches"
+              name="heightInches"
+              type="number"
+              class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+            />
+          </label>
+        </div>
+
+        <label class="block text-sm font-medium">
+          Glucose (mg/dL)
+          <input
+            [(ngModel)]="glucose"
+            name="glucose"
+            type="number"
+            class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+          />
+        </label>
+      </div>
+
+      <button class="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+        Save metric
+      </button>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 class="text-lg font-semibold">Compare with averages</h2>
+      <p class="mt-2 text-sm text-slate-500">
+        Pull population averages by age, gender, and ethnicity from the configured data source.
+      </p>
+      <div class="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+        Average BMI: 24.1<br />Average Glucose: 96 mg/dL
+      </div>
+    </div>
+  </div>
+
+  <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <h2 class="text-lg font-semibold">Historical trends</h2>
+    <p class="text-sm text-slate-500">Chart placeholder for BMI, weight, and glucose over time.</p>
+    <div class="mt-4 h-40 rounded-xl bg-slate-100"></div>
+  </div>
+</section>
