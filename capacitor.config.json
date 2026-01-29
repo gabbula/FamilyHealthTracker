@@ -1,0 +1,9 @@
+{
+  "appId": "com.familyhealthtracker.app",
+  "appName": "Family Health Tracker",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
