@@ -1,5 +1,12 @@
 // Family Health Tracker App
 class FamilyHealthTracker {
+    // BMI category thresholds
+    static BMI_THRESHOLDS = {
+        UNDERWEIGHT: 18.5,
+        NORMAL: 25,
+        OVERWEIGHT: 30
+    };
+
     constructor() {
         this.profiles = this.loadProfiles();
         this.currentProfile = null;
@@ -41,17 +48,30 @@ class FamilyHealthTracker {
 
     setDefaultDate() {
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById('entry-date').value = today;
+        const dateInput = document.getElementById('entry-date');
+        dateInput.value = today;
+        dateInput.setAttribute('max', today);
     }
 
     // Profile Management
     loadProfiles() {
-        const saved = localStorage.getItem('familyProfiles');
-        return saved ? JSON.parse(saved) : [];
+        try {
+            const saved = localStorage.getItem('familyProfiles');
+            return saved ? JSON.parse(saved) : [];
+        } catch (error) {
+            console.error('Error loading profiles from localStorage:', error);
+            alert('Unable to load saved profiles. Your browser may have storage disabled.');
+            return [];
+        }
     }
 
     saveProfilesToStorage() {
-        localStorage.setItem('familyProfiles', JSON.stringify(this.profiles));
+        try {
+            localStorage.setItem('familyProfiles', JSON.stringify(this.profiles));
+        } catch (error) {
+            console.error('Error saving profiles to localStorage:', error);
+            alert('Unable to save profiles. Your browser storage may be full or disabled.');
+        }
     }
 
     showProfileModal(profile = null) {
@@ -126,18 +146,32 @@ class FamilyHealthTracker {
         
         container.innerHTML = this.profiles.map(profile => `
             <div class="profile-card">
-                <h3>${profile.name}</h3>
+                <h3>${this.escapeHtml(profile.name)}</h3>
                 <p>👤 Age: ${profile.age}</p>
                 <p>⚧ Gender: ${this.capitalize(profile.gender)}</p>
                 <p>🌍 Ethnicity: ${this.capitalize(profile.ethnicity)}</p>
                 <p>📊 BMI Records: ${profile.bmiData.length}</p>
                 <div class="profile-actions">
-                    <button class="btn-view" onclick="app.viewProfile(${profile.id})">View</button>
-                    <button class="btn-edit" onclick="app.showProfileModal(${JSON.stringify(profile).replace(/"/g, '&quot;')})">Edit</button>
-                    <button class="btn-delete" onclick="app.deleteProfile(${profile.id})">Delete</button>
+                    <button class="btn-view" data-profile-id="${profile.id}">View</button>
+                    <button class="btn-edit" data-profile-id="${profile.id}">Edit</button>
+                    <button class="btn-delete" data-profile-id="${profile.id}">Delete</button>
                 </div>
             </div>
         `).join('');
+        
+        // Add event delegation for profile actions
+        container.querySelectorAll('.btn-view').forEach(btn => {
+            btn.addEventListener('click', () => this.viewProfile(parseInt(btn.dataset.profileId)));
+        });
+        container.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const profile = this.profiles.find(p => p.id === parseInt(btn.dataset.profileId));
+                this.showProfileModal(profile);
+            });
+        });
+        container.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', () => this.deleteProfile(parseInt(btn.dataset.profileId)));
+        });
     }
 
     viewProfile(profileId) {
@@ -161,6 +195,11 @@ class FamilyHealthTracker {
 
     // BMI Calculations
     calculateBMI(weight, height) {
+        // Validate inputs
+        if (!weight || !height || weight <= 0 || height <= 0) {
+            throw new Error('Weight and height must be positive numbers');
+        }
+        
         // height in cm, convert to meters
         const heightInMeters = height / 100;
         const bmi = weight / (heightInMeters * heightInMeters);
@@ -168,16 +207,18 @@ class FamilyHealthTracker {
     }
 
     getBMICategory(bmi) {
-        if (bmi < 18.5) return 'Underweight';
-        if (bmi < 25) return 'Normal weight';
-        if (bmi < 30) return 'Overweight';
+        const { UNDERWEIGHT, NORMAL, OVERWEIGHT } = FamilyHealthTracker.BMI_THRESHOLDS;
+        if (bmi < UNDERWEIGHT) return 'Underweight';
+        if (bmi < NORMAL) return 'Normal weight';
+        if (bmi < OVERWEIGHT) return 'Overweight';
         return 'Obese';
     }
 
     getBMICategoryColor(bmi) {
-        if (bmi < 18.5) return '#ffa726'; // orange
-        if (bmi < 25) return '#66bb6a'; // green
-        if (bmi < 30) return '#ffa726'; // orange
+        const { UNDERWEIGHT, NORMAL, OVERWEIGHT } = FamilyHealthTracker.BMI_THRESHOLDS;
+        if (bmi < UNDERWEIGHT) return '#ffa726'; // orange
+        if (bmi < NORMAL) return '#66bb6a'; // green
+        if (bmi < OVERWEIGHT) return '#ffa726'; // orange
         return '#ef5350'; // red
     }
 
@@ -188,32 +229,46 @@ class FamilyHealthTracker {
         const height = parseFloat(document.getElementById('height').value);
         const date = document.getElementById('entry-date').value;
         
-        const bmi = this.calculateBMI(weight, height);
-        const category = this.getBMICategory(parseFloat(bmi));
+        // Validate date is not in the future
+        const selectedDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         
-        const bmiEntry = {
-            id: Date.now(),
-            weight,
-            height,
-            bmi: parseFloat(bmi),
-            category,
-            date
-        };
+        if (selectedDate > today) {
+            alert('Cannot enter BMI data for future dates. Please select today or an earlier date.');
+            return;
+        }
         
-        this.currentProfile.bmiData.unshift(bmiEntry);
-        
-        // Update profile in main array
-        const profileIndex = this.profiles.findIndex(p => p.id === this.currentProfile.id);
-        this.profiles[profileIndex] = this.currentProfile;
-        this.saveProfilesToStorage();
-        
-        // Show result
-        this.displayBMIResult(bmi, category);
-        
-        // Reset form and render history
-        document.getElementById('bmi-form').reset();
-        this.setDefaultDate();
-        this.renderBMIHistory();
+        try {
+            const bmi = this.calculateBMI(weight, height);
+            const category = this.getBMICategory(parseFloat(bmi));
+            
+            const bmiEntry = {
+                id: Date.now(),
+                weight,
+                height,
+                bmi: parseFloat(bmi),
+                category,
+                date
+            };
+            
+            this.currentProfile.bmiData.unshift(bmiEntry);
+            
+            // Update profile in main array
+            const profileIndex = this.profiles.findIndex(p => p.id === this.currentProfile.id);
+            this.profiles[profileIndex] = this.currentProfile;
+            this.saveProfilesToStorage();
+            
+            // Show result
+            this.displayBMIResult(bmi, category);
+            
+            // Reset form and render history
+            document.getElementById('bmi-form').reset();
+            this.setDefaultDate();
+            this.renderBMIHistory();
+        } catch (error) {
+            alert('Error calculating BMI: ' + error.message);
+        }
     }
 
     displayBMIResult(bmi, category) {
@@ -264,9 +319,14 @@ class FamilyHealthTracker {
                         📏 ${entry.height}cm
                     </div>
                 </div>
-                <button class="bmi-entry-delete" onclick="app.deleteBMIEntry(${entry.id})">Delete</button>
+                <button class="bmi-entry-delete" data-entry-id="${entry.id}">Delete</button>
             </div>
         `).join('');
+        
+        // Add event delegation for delete buttons
+        container.querySelectorAll('.bmi-entry-delete').forEach(btn => {
+            btn.addEventListener('click', () => this.deleteBMIEntry(parseInt(btn.dataset.entryId)));
+        });
     }
 
     // Comparison Data
@@ -322,10 +382,10 @@ class FamilyHealthTracker {
             <div class="comparison-info">
                 <h4>Helpful Resources</h4>
                 <ul>
-                    <li><a href="https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight" target="_blank">WHO: Obesity and Overweight</a></li>
-                    <li><a href="https://www.cdc.gov/healthyweight/assessing/bmi/index.html" target="_blank">CDC: About BMI</a></li>
-                    <li><a href="https://www.nhlbi.nih.gov/health/educational/lose_wt/BMI/bmicalc.htm" target="_blank">NHLBI: BMI Calculator</a></li>
-                    <li><a href="https://www.heart.org/en/healthy-living/healthy-eating/losing-weight/bmi-in-adults" target="_blank">American Heart Association: BMI in Adults</a></li>
+                    <li><a href="https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight" target="_blank" rel="noopener noreferrer">WHO: Obesity and Overweight</a></li>
+                    <li><a href="https://www.cdc.gov/healthyweight/assessing/bmi/index.html" target="_blank" rel="noopener noreferrer">CDC: About BMI</a></li>
+                    <li><a href="https://www.nhlbi.nih.gov/health/educational/lose_wt/BMI/bmicalc.htm" target="_blank" rel="noopener noreferrer">NHLBI: BMI Calculator</a></li>
+                    <li><a href="https://www.heart.org/en/healthy-living/healthy-eating/losing-weight/bmi-in-adults" target="_blank" rel="noopener noreferrer">American Heart Association: BMI in Adults</a></li>
                 </ul>
             </div>
         `;
@@ -335,17 +395,21 @@ class FamilyHealthTracker {
 
     getAverageBMIData(age, gender, ethnicity) {
         // Average BMI ranges based on demographics
-        // These are simplified averages for demonstration
+        // Note: These are standard WHO ranges with simplified ethnicity adjustments
+        // For medical decisions, please consult with a healthcare provider
+        const { UNDERWEIGHT, NORMAL, OVERWEIGHT } = FamilyHealthTracker.BMI_THRESHOLDS;
         const baseRanges = {
-            underweight: { min: 0, max: 18.5 },
-            normal: { min: 18.5, max: 25 },
-            overweight: { min: 25, max: 30 },
-            obese: { min: 30, max: 50 }
+            underweight: { min: 0, max: UNDERWEIGHT },
+            normal: { min: UNDERWEIGHT, max: NORMAL },
+            overweight: { min: NORMAL, max: OVERWEIGHT },
+            obese: { min: OVERWEIGHT, max: 50 }
         };
         
-        // Adjustments based on ethnicity (simplified for demonstration)
+        // Ethnicity-based adjustments (simplified)
+        // Reference: WHO expert consultation (2004) on BMI for Asian populations
+        // suggested lower cut-off points for public health action
         const ethnicityAdjustments = {
-            asian: -2.5, // Lower BMI thresholds for Asians
+            asian: -2.5, // Approximate adjustment for Asian populations
             black: 0,
             white: 0,
             hispanic: 0,
@@ -382,8 +446,11 @@ class FamilyHealthTracker {
             { name: 'Obese', data: averageData.obese }
         ];
         
-        return categories.map(cat => {
-            const isInRange = currentBMI >= cat.data.min && currentBMI < cat.data.max;
+        return categories.map((cat, index) => {
+            // For obese category, check only lower bound; for others, check range
+            const isInRange = index === categories.length - 1 
+                ? currentBMI >= cat.data.min 
+                : currentBMI >= cat.data.min && currentBMI < cat.data.max;
             const rowClass = isInRange ? 'class="highlight"' : '';
             const status = isInRange ? '✓ Your Current Range' : '';
             
@@ -398,15 +465,17 @@ class FamilyHealthTracker {
     }
 
     getHealthAdvice(bmi, age) {
-        if (bmi < 18.5) {
+        const { UNDERWEIGHT, NORMAL, OVERWEIGHT } = FamilyHealthTracker.BMI_THRESHOLDS;
+        
+        if (bmi < UNDERWEIGHT) {
             return `Your BMI indicates you are underweight. Consider consulting with a healthcare provider 
                     about healthy ways to gain weight. A balanced diet with adequate calories and regular 
                     strength training can help.`;
-        } else if (bmi < 25) {
+        } else if (bmi < NORMAL) {
             return `Your BMI is in the normal range! Maintain your healthy weight through a balanced diet 
                     and regular physical activity. Aim for at least 150 minutes of moderate aerobic activity 
                     per week.`;
-        } else if (bmi < 30) {
+        } else if (bmi < OVERWEIGHT) {
             return `Your BMI indicates you are overweight. Consider making lifestyle changes such as eating 
                     a balanced, calorie-controlled diet and increasing physical activity. Even a small weight 
                     loss of 5-10% can have significant health benefits.`;
@@ -422,8 +491,16 @@ class FamilyHealthTracker {
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     formatDate(dateStr) {
-        const date = new Date(dateStr);
+        // Parse date string as local date to avoid timezone issues
+        const [year, month, day] = dateStr.split('-').map(num => parseInt(num));
+        const date = new Date(year, month - 1, day);
         return date.toLocaleDateString('en-US', { 
             year: 'numeric', 
             month: 'short', 

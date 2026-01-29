@@ -22,9 +22,9 @@
             </section>
 
             <!-- Add/Edit Profile Modal -->
-            <div id="profile-modal" class="modal">
+            <div id="profile-modal" class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
                 <div class="modal-content">
-                    <span class="close">&times;</span>
+                    <button class="close" aria-label="Close modal">&times;</button>
                     <h2 id="modal-title">Add Family Member</h2>
                     <form id="profile-form">
                         <div class="form-group">
@@ -84,7 +84,7 @@
                         </div>
                         <div class="form-group">
                             <label for="entry-date">Date:</label>
-                            <input type="date" id="entry-date" required>
+                            <input type="date" id="entry-date" max="" required>
                         </div>
                         <button type="submit" class="btn btn-primary">Calculate & Save BMI</button>
                     </form>
@@ -108,10 +108,10 @@
             </section>
 
             <!-- Comparison Modal -->
-            <div id="comparison-modal" class="modal">
+            <div id="comparison-modal" class="modal" role="dialog" aria-labelledby="comparison-title" aria-modal="true">
                 <div class="modal-content">
-                    <span class="close">&times;</span>
-                    <h2>BMI Comparison Data</h2>
+                    <button class="close" aria-label="Close modal">&times;</button>
+                    <h2 id="comparison-title">BMI Comparison Data</h2>
                     <div id="comparison-content"></div>
                 </div>
             </div>
