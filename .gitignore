@@ -15,13 +15,31 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+.vs/
 .idea
 .DS_Store
 *.suo
+*.user
+*.rsuser
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# .NET build artifacts
+**/bin/
+**/obj/
+*.pdb
+*.cache
+
+# Angular
+.angular/
+coverage/
+.cache/
+
+# Env files
+.env
+.env.*
 
 # Capacitor
 android/

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FamilyHealthTracker.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+04c56ee17114c2c99e2fd3e080436db71c251d32")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9c9cb471f56c9210906fb26ddea27d5f4a513cb8")]
 [assembly: System.Reflection.AssemblyProductAttribute("FamilyHealthTracker.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FamilyHealthTracker.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

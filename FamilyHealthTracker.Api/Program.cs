@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using System.Threading.RateLimiting;
 using FamilyHealthTracker.Api.Data;
 using FamilyHealthTracker.Api.Options;
 using FamilyHealthTracker.Api.Services;
@@ -26,7 +27,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer")));
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
-    ConnectionMultiplexer.Connect(builder.Configuration.GetSection(RedisOptions.SectionName).GetValue<string>("ConnectionString")));
+{
+    var connectionString = builder.Configuration.GetSection(RedisOptions.SectionName).GetValue<string>("ConnectionString")
+        ?? throw new InvalidOperationException("Redis connection string is missing.");
+    return ConnectionMultiplexer.Connect(connectionString);
+});
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -93,5 +98,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.Run();
