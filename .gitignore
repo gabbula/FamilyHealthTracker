@@ -1,0 +1,47 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.vs/
+.idea
+.DS_Store
+*.suo
+*.user
+*.rsuser
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# .NET build artifacts
+**/bin/
+**/obj/
+*.pdb
+*.cache
+
+# Angular
+.angular/
+coverage/
+.cache/
+
+# Env files
+.env
+.env.*
+
+# Capacitor
+android/
+ios/
+.capacitor/
